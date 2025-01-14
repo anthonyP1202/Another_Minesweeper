@@ -1,8 +1,8 @@
-import tkinter
 import math
 
 class tile :
     is_mine = False
+    is_flagged = False
     mine_value = 1
     location = []
     surrounding_mine = 0
