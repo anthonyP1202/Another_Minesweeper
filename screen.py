@@ -1,15 +1,16 @@
 import tkinter
 from tile import tile
+import random
 
-def put_flaged():
+def put_flaged(tile):
     pass
 
-def reveal_mine():
+def reveal_mine(tile):
     pass
 
 def create_board():
-    x = 20 
-    y = 20
+    x = 10
+    y = 10
     
     try :
         x = int(size_x.get())
@@ -24,6 +25,30 @@ def create_board():
             frame = tile(location=[x, y])
             row.append(frame)
         board.append(row)
+    return board  # Return the 2D list of tiles
+
+
+
+def random_bomb_location(table,numb_bomb):
+    trash=[]
+    rows = len(table)
+    cols = len(table[0]) if rows > 0 else 0
+    rand_row=0
+    rand_col=0
+
+    for rando in range(numb_bomb):
+        rand_row=random.randint(0,rows-1)
+        rand_col=random.randint(0,cols-1)
+        if [rand_row,rand_col] in trash:
+            rando-=1
+        else:
+            trash.append([rand_row,rand_col])
+            table[rand_row][rand_col].is_mine=True
+    
+    return table
+
+
+
 
 root = tkinter.Tk()
 root.geometry("1728x864")
@@ -57,4 +82,12 @@ size_x.place(x=x_center - 100, y=y_center)
 size_y = tkinter.Entry(root, width=5)
 size_y.place(x=x_center + 95, y=y_center)
 
-root.mainloop() # start 
+# root.mainloop() # start 
+
+test_board=create_board()
+test_board2=random_bomb_location(test_board,10)
+is_mine_matrix = [[tile.is_mine for tile in row] for row in test_board2]
+
+# Print the matrix
+for row in is_mine_matrix:
+    print(row)

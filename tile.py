@@ -1,5 +1,5 @@
 import math
-from typing import List
+
 
 class tile :
     is_mine = False
@@ -27,40 +27,12 @@ class tile :
         pass
 
 
-import random
-
-long=15
-larg=15
-
-def make_table(x,y):
-    table=[]
-    for _ in range(y):
-        bby_tab=[]
-        for _ in range (x):
-            bby_tab.append(0)
-        table.append(bby_tab)
-    return table
 
 
 
 
-def random_bomb_location(table:List[List[tile]],numb_bomb):
-    trash=[]
-    rows = len(table)
-    cols = len(table[0]) if rows > 0 else 0
-    rand_row=0
-    rand_col=0
 
-    for rando in range(numb_bomb):
-        rand_row=random.randint(0,rows-1)
-        rand_col=random.randint(0,cols-1)
-        if [rand_row,rand_col] in trash:
-            rando-=1
-        else:
-            trash.append([rand_row,rand_col])
-            table[rand_row][rand_col]=tile(is_mine=True, is_flagged = False, mine_value = 1 ,location = [] ,surrounding_mine = 0)
-    
-    return table
+
 
 
 
