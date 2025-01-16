@@ -63,6 +63,12 @@ def toggle_flag(tile, button):
     """
     Place ou retire un drapeau sur le bouton correspondant à la tuile.
     """
+
+    if tile in clicked_tiles:  # Vérifie si la case est déjà révélée
+        print("Tile is already revealed. Cannot place a flag.")
+        return
+
+
     if not tile.is_flagged:  # Place un drapeau
         tile.is_flagged = True
         button.config(text="🚩", state="normal")  # Mettre l'emoji du drapeau
