@@ -111,6 +111,23 @@ def reveal_tile(tile, button):
         button.config(text="💣", bg="red")
         end_game()
         return
+    
+    if tile in clicked_tiles:
+        x, y = tile.location 
+        print("in clicked")
+        if tile.surrounding_flags(test_board) == True:
+            for dx in range(-1, 2):
+                for dy in range(-1, 2):
+                    if dx == 0 and dy == 0:
+                        continue  # Skip the tile itself
+            
+                    nx, ny = x + dx, y + dy
+                    if 0 <= nx < len(test_board) and 0 <= ny < len(test_board[0]):
+                        neighbor = test_board[nx][ny]
+                        button = buttons[nx * len(test_board[0]) + ny] # Find the button for this tile
+                        if neighbor not in clicked_tiles:
+                            reveal_tile(neighbor, button)
+                    
 
     if tile not in clicked_tiles:
         # First click: reveal the tile
@@ -120,6 +137,8 @@ def reveal_tile(tile, button):
             relief="sunken",
             bg="lightgrey" if tile.surrounding_mine == 0 else "SystemButtonFace"
         )
+        if tile.surrounding_mine == 0:
+            reveal_connected_tiles(tile)
     else:
         # Second click: reveal all connected empty tiles
         if tile.surrounding_mine == 0:
@@ -147,7 +166,7 @@ def reveal_connected_tiles(tile):
                     clicked_tiles.add(neighbor)
                     neighbor_button_text = str(neighbor.surrounding_mine) if neighbor.surrounding_mine > 0 else ""
                     neighbor_button_bg = "lightgrey" if neighbor.surrounding_mine == 0 else "SystemButtonFace"
-                    button.config(text=neighbor_button_text, bg=neighbor_button_bg, state="disabled", relief="sunken")
+                    button.config(text=neighbor_button_text, bg=neighbor_button_bg, relief="sunken")
                     if neighbor.surrounding_mine == 0:  # If neighbor is also empty, continue flood-fill
                         reveal_connected_tiles(neighbor)
     check_win_condition()
