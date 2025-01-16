@@ -3,6 +3,7 @@ class Tile:
         self.is_mine = is_mine  # Instance variable for whether this tile is a mine
         self.location = location  # Location of the tile
         self.surrounding_mine = 0  # Instance variable for the count of surrounding mines
+        self.is_flagged = False
 
 
     def surrounding_mines(self, board, away=1):

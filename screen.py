@@ -1,19 +1,18 @@
 import tkinter
 import random
-from tile import Tile  
-
+from tile import Tile  # Assuming the Tile class is as defined above
 
 # Function to create the board with Tile objects
 def create_board():
     x = 10
     y = 10
-    
+
     try:
         x = int(size_x.get())
         y = int(size_y.get())
-    except:
+    except ValueError:
         pass
-    
+
     board = []
     for cs in range(x):
         row = []
@@ -21,8 +20,17 @@ def create_board():
             frame = Tile(location=[cs, i])  # Create a tile with coordinates
             row.append(frame)
         board.append(row)
-    return board  # Return the 2D list of tiles
+    return board
 
+def calculate_bomb_count(board, percentage=0.15):
+    """
+    Calcule le nombre de bombes en fonction d'un pourcentage du total des tuiles.
+    Par défaut, 15 % des tuiles sont des bombes.
+    """
+    rows = len(board)
+    cols = len(board[0]) if rows > 0 else 0
+    total_tiles = rows * cols
+    return max(1, int(total_tiles * percentage))  # Au moins 1 bombe
 
 # Function to place bombs randomly on the board
 def random_bomb_location(table, numb_bomb):
@@ -50,54 +58,87 @@ def all_surrounding_mines(board):
     return board
 
 
+# Fonction pour ajouter ou retirer un drapeau
+def toggle_flag(tile, button):
+    """
+    Place ou retire un drapeau sur le bouton correspondant à la tuile.
+    """
+    if not tile.is_flagged:  # Place un drapeau
+        tile.is_flagged = True
+        button.config(text="🚩", state="normal")  # Mettre l'emoji du drapeau
+    else:  # Retire le drapeau
+        tile.is_flagged = False
+        button.config(text="", state="normal")  # Supprime l'emoji
+
+# Fonction pour révéler une tuile (clic gauche)
+def reveal_tile(tile, button):
+    """
+    Révèle la tuile (clic gauche). Si la tuile est une mine, elle termine le jeu.
+    """
+    if tile.is_flagged:  # Ne rien faire si un drapeau est placé
+        return
+    
+    if tile.is_mine:
+        button.config(text="💣", bg="red")  # Affiche une bombe
+        print("Game Over!")  # Vous pouvez ajouter une logique pour terminer la partie
+    else:
+        button.config(text=str(tile.surrounding_mine) if tile.surrounding_mine > 0 else "",
+                      state="disabled", relief="sunken")
+        if tile.surrounding_mine == 0:
+            button.config(bg="lightgrey")
+
+# Fonction pour afficher le plateau de jeu
+def render_game_board(board):
+    """
+    Affiche le plateau de jeu avec des boutons correspondant aux tuiles.
+    """
+    for i, row in enumerate(board):
+        for j, tile in enumerate(row):
+            # Créez un bouton pour chaque tuile
+            btn = tkinter.Button(game_frame, width=3, height=1, text="")
+            btn.grid(row=i, column=j, padx=1, pady=1)
+
+            # Associer les clics gauche et droit
+            btn.config(command=lambda t=tile, b=btn: reveal_tile(t, b))  # Clic gauche
+            btn.bind("<Button-3>", lambda event, t=tile, b=btn: toggle_flag(t, b))  # Clic droit
+
+
+
+
 # GUI setup
 root = tkinter.Tk()
-root.geometry("1728x864")
+root.geometry("800x600")
+root.title("Minesweeper")
 
-size_width = 1728
-size_height = 864
-
-# background
-canvas = tkinter.Canvas(root, width=size_width, height=size_height, bg="white") 
-canvas.pack()
-
-settings_background = canvas.create_rectangle(size_width * 0.1, size_height * 0.1 , size_width * 0.9, size_height * 0.15, fill="#8F908F", outline="#CCCCCC") #header
-game_background = canvas.create_rectangle(size_width * 0.1, size_height * 0.15, size_width * 0.9, size_height * 0.9, fill="#B6B6B6", outline="#CCCCCC") #play area
-
-button_width = 100
-button_height = 20
-
-# Calculate button position (centered in the play area)
-x_center = (size_width * 0.1 + size_width * 0.9) / 2 - 100 / 2
-y_center = (size_height * 0.1 + size_height * 0.15) / 2 - 20 / 2
-
-# Create and place the button
-start_button = tkinter.Button(root, text="o", background="#8D8D8D", command=create_board)
-start_button.place(x=x_center, y=y_center)
-
-# board size settings
+# Entry for board size settings
 size_x = tkinter.Entry(root, width=5)
-size_x.place(x=x_center - 100, y=y_center)
+size_x.insert(0, "10")
+size_x.pack(side="left")
+
 size_y = tkinter.Entry(root, width=5)
-size_y.place(x=x_center + 95, y=y_center)
+size_y.insert(0, "10")
+size_y.pack(side="left")
 
-# Create and test board
-test_board = create_board()
-test_board = random_bomb_location(test_board, 10)  # Randomly place 10 bombs
-test_board = all_surrounding_mines(test_board)  # Calculate surrounding mines for each tile
+# Start game button
+start_button = tkinter.Button(root, text="Start Game", command=lambda: start_game())
+start_button.pack(side="left")
 
-# Print the matrix of surrounding mines
-surr_matrix = [[tile.surrounding_mine for tile in row] for row in test_board]
-is_mine_matrix = [['O' if tile.is_mine else 'X' for tile in row] for row in test_board]
+# Frame for game area
+game_frame = tkinter.Frame(root)
+game_frame.pack(expand=True, fill="both")
 
-# Print the matrix
-for row in is_mine_matrix:
-    print(row)
+# Function to start/restart the game
+def start_game():
+    for widget in game_frame.winfo_children():
+        widget.destroy()  # Clear the game frame
+
+    global test_board
+    test_board = create_board()
+    num_bombs = calculate_bomb_count(test_board, percentage=0.15)  # Ajustez le pourcentage si nécessaire
+    test_board = random_bomb_location(test_board, num_bombs)  # Place 10 bombs
+    test_board = all_surrounding_mines(test_board)  # Calculate surrounding mines
+    render_game_board(test_board)  # Render the board as buttons
 
 
-# Print the matrix
-print ("------------------------------")
-
-for row in surr_matrix:
-    print(row)
-
+# Start the main loop
+root.mainloop()
