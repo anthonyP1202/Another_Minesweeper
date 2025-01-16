@@ -2,10 +2,10 @@ import tkinter
 from tile import tile
 
 def put_flaged(tile):
-    pass
+    print(tile.is_revealed)
 
 def reveal_mine(tile):
-    pass
+    print(tile.is_mine)
 
 def create_board():
     x = 20 
@@ -25,14 +25,14 @@ def create_board():
             row.append(frame)
         board.append(row)
 
-    for f in range (x):
-        for g in range (y):
-            bton = tkinter.Button(root)
-            bton.bind("<Button-1>", reveal_mine(board[f][g]))
-            bton.bind("<Button-3>", put_flaged(board[f][g]))
-            bton.grid(row=f, column=g)
-            
-
+    for f in range(x):
+        for g in range(y):
+            bton = tkinter.Button(root, width=5, height=5)
+            # Bind left-click to reveal_mine and right-click to put_flaged
+            bton.bind("<Button-1>", lambda event, f=f, g=g: reveal_mine(board[f][g]))
+            bton.bind("<Button-3>", lambda event, f=f, g=g: put_flaged(board[f][g]))
+            bton.place(x=g * 20 + x_center/2, y=f * 20 + y_center * 1.9)
+            #  bton.place(x=x_center/2 + g * 30, y=y_center + f * 30)
 
 root = tkinter.Tk()
 root.geometry("1728x864")
