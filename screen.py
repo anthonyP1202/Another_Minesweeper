@@ -1,10 +1,18 @@
 import tkinter
 from tile import tile
 
-def put_flaged(tile):
-    print(tile.is_revealed)
+def put_flaged(tile, button = tkinter.Button):
+    if tile.is_flagged == True:
+        tile.is_flagged = False
+        button.config(text="")
+    else:
+        tile.is_flagged = True
+        button.config(text="P")
+    
+    print(type(tile))
+    print(type(button))
 
-def reveal_mine(tile):
+def reveal_mine(tile, button):
     print(tile.is_mine)
 
 def create_board():
@@ -29,8 +37,8 @@ def create_board():
         for g in range(y):
             bton = tkinter.Button(root, width=5, height=5)
             # Bind left-click to reveal_mine and right-click to put_flaged
-            bton.bind("<Button-1>", lambda event, f=f, g=g: reveal_mine(board[f][g]))
-            bton.bind("<Button-3>", lambda event, f=f, g=g: put_flaged(board[f][g]))
+            bton.bind("<Button-1>", lambda event, f=f, g=g, bton=bton: reveal_mine(board[f][g], bton))
+            bton.bind("<Button-3>", lambda event, f=f, g=g, bton=bton: put_flaged(board[f][g], bton))
             bton.place(x=g * 20 + x_center/2, y=f * 20 + y_center * 1.9)
             #  bton.place(x=x_center/2 + g * 30, y=y_center + f * 30)
 

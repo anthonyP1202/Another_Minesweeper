@@ -3,6 +3,7 @@ import math
 class tile :
     is_mine = False
     is_flagged = False
+    is_revealed = 0
     mine_value = 1
     location = []
     surrounding_mine = 0
