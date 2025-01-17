@@ -1,4 +1,5 @@
 import tkinter
+from tkinter import ttk
 import random
 from tile import Tile  # Assuming the Tile class is as defined above
 from collections import deque
@@ -210,11 +211,20 @@ def render_game_board(board):
     global buttons
     buttons = []  # Reset the button list
 
+    # Create a style for the scrollbars
+    style = tkinter.ttk.Style()
+    style.theme_use("default")  # Use default theme for customization
+    style.configure("Red.Vertical.TScrollbar", background="red", troughcolor="white", arrowcolor="red")
+    style.configure("Red.Horizontal.TScrollbar", background="red", troughcolor="white", arrowcolor="red")
+
+
+    # Create the canvas and scrollbars
     # Create the canvas and scrollbars
     canvas = tkinter.Canvas(game_frame)
-    scrollbar_y = tkinter.Scrollbar(game_frame, orient="vertical", command=canvas.yview)
-    scrollbar_x = tkinter.Scrollbar(game_frame, orient="horizontal", command=canvas.xview)
+    scrollbar_y = tkinter.ttk.Scrollbar(game_frame, orient="vertical", command=canvas.yview, style="Red.Vertical.TScrollbar")
+    scrollbar_x = tkinter.ttk.Scrollbar(game_frame, orient="horizontal", command=canvas.xview, style="Red.Horizontal.TScrollbar")
     canvas.configure(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
+
 
     # Create a frame to hold the game board on the canvas
     board_frame = tkinter.Frame(canvas)
@@ -327,13 +337,17 @@ def display_win_message():
 
 
 
+
 # GUI setup
 root = tkinter.Tk()
 root.geometry("1000x1000")
 
-# Zone de jeu
-game_frame = tkinter.Frame(root, bg="white")
+# Zone de jeu (add a border around the game area)
+game_frame = tkinter.Frame(root, bg="lightblue", borderwidth=10, relief="solid")  # Change the color here
 game_frame.place(relx=0.5, rely=0.6, anchor="center")
+
+# Other parts of your code remain the same...
+
 
 # Bouton pour démarrer une nouvelle partie
 start_button = tkinter.Button(root, text="Start Game", command=start_game)
