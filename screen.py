@@ -1,6 +1,7 @@
 import tkinter
 import random
 from tile import Tile  # Assuming the Tile class is as defined above
+from collections import deque
 
 # Function to create the board with Tile objects
 def create_board():
@@ -158,27 +159,48 @@ def reveal_tile(tile, button):
 
 def reveal_connected_tiles(tile):
     """
-    Recursively reveals all connected empty tiles and their neighbors.
+    Iteratively reveals all connected empty tiles and their neighbors.
+    This is optimized to use batch updates with a queue for connected tiles.
     """
-    x, y = tile.location
-    for dx in range(-1, 2):
-        for dy in range(-1, 2):
-            if dx == 0 and dy == 0:
-                continue  # Skip the tile itself
-            
-            nx, ny = x + dx, y + dy
-            if 0 <= nx < len(test_board) and 0 <= ny < len(test_board[0]):
-                neighbor = test_board[nx][ny]
-                button = buttons[nx * len(test_board[0]) + ny]  # Find the button for this tile
-                if neighbor not in clicked_tiles:  # Reveal only if not already revealed
-                    clicked_tiles.add(neighbor)
-                    neighbor_button_text = str(neighbor.surrounding_mine) if neighbor.surrounding_mine > 0 else ""
-                    neighbor_button_bg = "lightgrey" if neighbor.surrounding_mine == 0 else "SystemButtonFace"
-                    button.config(text=neighbor_button_text, bg=neighbor_button_bg, relief="sunken")
-                    if neighbor.surrounding_mine == 0:  # If neighbor is also empty, continue flood-fill
-                        reveal_connected_tiles(neighbor)
-    check_win_condition()
+    # Initialize a queue with the starting tile
+    queue = deque([tile])
+    clicked_tiles.add(tile)
+    
+    # List to store tiles that need to be updated
+    tiles_to_update = []
 
+    while queue:
+        current_tile = queue.popleft()  # Pop the next tile to reveal
+        x, y = current_tile.location
+        tiles_to_update.append(current_tile)  # Add to update list
+        
+        # If the current tile is empty (surrounding_mine == 0), we add its neighbors to the queue
+        if current_tile.surrounding_mine == 0:
+            for dx in range(-1, 2):
+                for dy in range(-1, 2):
+                    if dx == 0 and dy == 0:
+                        continue  # Skip the tile itself
+                    
+                    nx, ny = x + dx, y + dy
+                    if 0 <= nx < len(test_board) and 0 <= ny < len(test_board[0]):
+                        neighbor = test_board[nx][ny]
+                        if neighbor not in clicked_tiles:  # Add unclicked neighbors
+                            clicked_tiles.add(neighbor)
+                            queue.append(neighbor)
+    
+    # Now, update all tiles in batch (after collecting all connected tiles)
+    for current_tile in tiles_to_update:
+        x, y = current_tile.location
+        button = buttons[x * len(test_board[0]) + y]  # Find the button for this tile
+        
+        # Update button text and background
+        button.config(
+            text=str(current_tile.surrounding_mine) if current_tile.surrounding_mine > 0 else "",
+            bg="lightgrey" if current_tile.surrounding_mine == 0 else "SystemButtonFace",
+            relief="sunken"
+        )
+    
+    check_win_condition() 
 
 # Fonction pour afficher le plateau de jeu
 def render_game_board(board):
