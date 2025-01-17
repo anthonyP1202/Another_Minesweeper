@@ -188,11 +188,20 @@ def render_game_board(board):
     global buttons
     buttons = []  # Reset the button list
 
-    # Create the buttons and add them to the grid
+    # Create the canvas and scrollbars
+    canvas = tkinter.Canvas(game_frame)
+    scrollbar_y = tkinter.Scrollbar(game_frame, orient="vertical", command=canvas.yview)
+    scrollbar_x = tkinter.Scrollbar(game_frame, orient="horizontal", command=canvas.xview)
+    canvas.configure(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
+
+    # Create a frame to hold the game board on the canvas
+    board_frame = tkinter.Frame(canvas)
+    
+    # Create the buttons and add them to the board frame
     for i, row in enumerate(board):
         for j, tile in enumerate(row):
             # Create a button for each tile
-            btn = tkinter.Button(game_frame, width=3, height=1, text="")
+            btn = tkinter.Button(board_frame, width=3, height=1, text="")
             btn.grid(row=i, column=j, padx=1, pady=1, sticky="nsew")  # Make the button expand
 
             # Associate left and right clicks
@@ -204,9 +213,27 @@ def render_game_board(board):
 
     # Dynamically scale rows and columns
     for i in range(len(board)):
-        game_frame.grid_rowconfigure(i, weight=1, minsize=40)  # Scale row to expand
+        board_frame.grid_rowconfigure(i, weight=1, minsize=40)  # Scale row to expand
     for j in range(len(board[0])):
-        game_frame.grid_columnconfigure(j, weight=1, minsize=40)  # Scale column to expand
+        board_frame.grid_columnconfigure(j, weight=1, minsize=40)  # Scale column to expand
+    
+    # Add the frame to the canvas and scrollbars to the window
+    canvas.create_window((0, 0), window=board_frame, anchor="nw")
+    
+    # Dynamically resize the canvas and its frame based on the window size
+    canvas.grid(row=0, column=0, sticky="nsew")
+    scrollbar_y.grid(row=0, column=1, sticky="ns")
+    scrollbar_x.grid(row=1, column=0, sticky="ew")
+    
+    # Update the scrollable region after rendering the game board
+    board_frame.update_idletasks()
+    canvas.config(scrollregion=canvas.bbox("all"))  # Adjust scrollable region
+
+    # Dynamically resize grid to fit the board's size, but make the game_frame a little smaller than the window
+    game_frame.grid_rowconfigure(0, weight=1)
+    game_frame.grid_columnconfigure(0, weight=1)
+    game_frame.place(relx=0.5, rely=0.6, anchor="center", width=root.winfo_width() * 0.9, height=root.winfo_height() * 0.7)
+
 
 # Fonction pour démarrer une nouvelle partie
 def start_game():
