@@ -22,32 +22,40 @@ def create_board():
         board.append(row)
     return board
 
-def calculate_bomb_count(board, percentage=0.15):
+def calculate_bomb_count(board, percentage=15):
     """
     Calcule le nombre de bombes en fonction d'un pourcentage du total des tuiles.
     Par défaut, 15 % des tuiles sont des bombes.
     """
+    percentage=float(percentage.get())/100
     rows = len(board)
     cols = len(board[0]) if rows > 0 else 0
     total_tiles = rows * cols
     return max(1, int(total_tiles * percentage))  # Au moins 1 bombe
 
 # Function to place bombs randomly on the board
+import random
+
 def random_bomb_location(table, numb_bomb):
-    trash = []
     rows = len(table)
     cols = len(table[0]) if rows > 0 else 0
+    total_tiles = rows * cols
 
-    for _ in range(numb_bomb):
-        rand_row = random.randint(0, rows - 1)
-        rand_col = random.randint(0, cols - 1)
-        if [rand_row, rand_col] in trash:
-            continue  # Skip if the location already has a mine
-        else:
-            trash.append([rand_row, rand_col])
-            table[rand_row][rand_col].is_mine = True  # Place a mine on the tile
+    if numb_bomb > total_tiles:
+        raise ValueError("Number of bombs cannot exceed the total number of tiles.")
+
+    # Generate a list of all possible tile indices
+    all_positions = [(r, c) for r in range(rows) for c in range(cols)]
+
+    # Randomly sample `numb_bomb` unique positions
+    bomb_positions = random.sample(all_positions, numb_bomb)
+
+    # Place bombs on the randomly selected positions
+    for row, col in bomb_positions:
+        table[row][col].is_mine = True
 
     return table
+
 
 
 # Function to calculate all surrounding mines for each tile
@@ -175,22 +183,30 @@ def reveal_connected_tiles(tile):
 # Fonction pour afficher le plateau de jeu
 def render_game_board(board):
     """
-    Affiche le plateau de jeu avec des boutons correspondant aux tuiles.
+    Displays the game board with buttons corresponding to the tiles.
     """
     global buttons
-    buttons = []  # Réinitialiser la liste des boutons
+    buttons = []  # Reset the button list
+
+    # Create the buttons and add them to the grid
     for i, row in enumerate(board):
         for j, tile in enumerate(row):
-            # Créez un bouton pour chaque tuile
+            # Create a button for each tile
             btn = tkinter.Button(game_frame, width=3, height=1, text="")
-            btn.grid(row=i, column=j, padx=1, pady=1)
+            btn.grid(row=i, column=j, padx=1, pady=1, sticky="nsew")  # Make the button expand
 
-            # Associer les clics gauche et droit
-            btn.config(command=lambda t=tile, b=btn: reveal_tile(t, b))  # Clic gauche
-            btn.bind("<Button-3>", lambda event, t=tile, b=btn: toggle_flag(t, b))  # Clic droit
+            # Associate left and right clicks
+            btn.config(command=lambda t=tile, b=btn: reveal_tile(t, b))  # Left click
+            btn.bind("<Button-3>", lambda event, t=tile, b=btn: toggle_flag(t, b))  # Right click
             
-            # Ajouter le bouton à la liste
+            # Add the button to the list
             buttons.append(btn)
+
+    # Dynamically scale rows and columns
+    for i in range(len(board)):
+        game_frame.grid_rowconfigure(i, weight=1, minsize=40)  # Scale row to expand
+    for j in range(len(board[0])):
+        game_frame.grid_columnconfigure(j, weight=1, minsize=40)  # Scale column to expand
 
 # Fonction pour démarrer une nouvelle partie
 def start_game():
@@ -202,15 +218,29 @@ def start_game():
 
     # Create a new game board
     test_board = create_board()
-    num_bombs = calculate_bomb_count(test_board, 0.15)  # 15% of tiles are bombs
+    num_bombs = calculate_bomb_count(test_board, Bomb_percent)  # 15% of tiles are bombs
     test_board = random_bomb_location(test_board, num_bombs)
     test_board = all_surrounding_mines(test_board)
+
+    is_mine_matrix = [[tile.is_mine for tile in row] for row in test_board]
+
+    # Print the matrix
+    for row in is_mine_matrix:
+        print(row)
+
+    count = 0
+    for n in test_board:
+        for k in n:
+            if k.is_mine:
+                count += 1
+    print(count)
 
     # Clear the game area and render the new board
     for widget in game_frame.winfo_children():
         widget.destroy()
-
+    
     render_game_board(test_board)
+    
 
 
 
@@ -250,7 +280,7 @@ def display_win_message():
 
 # GUI setup
 root = tkinter.Tk()
-root.geometry("600x600")
+root.geometry("1000x1000")
 
 # Zone de jeu
 game_frame = tkinter.Frame(root, bg="white")
@@ -267,6 +297,10 @@ size_x.pack()
 size_y = tkinter.Entry(root, width=5)
 size_y.insert(0, "10")  # Valeur par défaut
 size_y.pack()
+
+Bomb_percent = tkinter.Entry(root, width=10)
+Bomb_percent.insert(15, "15")  # Valeur par défaut
+Bomb_percent.pack()
 
 # Démarrage initial
 # New variables for tracking win condition
