@@ -37,7 +37,7 @@ This project is a Python implementation of the classic Minesweeper game with a c
 
 ## Usage
 
-1. Run the game by executing the `screen.py` file:
+1. Run the game by executing the `minesweeper.py` file:
    ```bash
    python src/screen.py
    ```
