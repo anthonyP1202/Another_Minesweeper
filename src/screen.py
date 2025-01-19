@@ -1,10 +1,22 @@
 import tkinter
 from tkinter import ttk
 import random
-from tile import Tile  # Assuming the Tile class is as defined above
+from tile import Tile
 from collections import deque
+import random
 
-# Function to create the board with Tile objects
+
+"""**************************************************************************************************************"""
+"""****************************************                   ***************************************************"""
+"""****************************************  Board Creation   ***************************************************"""
+"""****************************************                   ***************************************************"""
+"""**************************************************************************************************************"""
+
+"""-----------------------------------------------"""
+"""---------- Create the board of Tiles ----------"""
+"""-----------------------------------------------"""
+
+
 def create_board():
     x = 10
     y = 10
@@ -24,19 +36,25 @@ def create_board():
         board.append(row)
     return board
 
+
+"""---------------------------------------------------------------------------------------------"""
+"""---------- Calculates the number of bombs based on a percentage of the total tiles ----------"""
+"""---------------------------------------------------------------------------------------------"""
+
+
 def calculate_bomb_count(board, percentage=15):
-    """
-    Calcule le nombre de bombes en fonction d'un pourcentage du total des tuiles.
-    Par défaut, 15 % des tuiles sont des bombes.
-    """
-    percentage=float(percentage.get())/100
+
+    percentage = float(percentage.get()) / 100
     rows = len(board)
     cols = len(board[0]) if rows > 0 else 0
     total_tiles = rows * cols
-    return max(1, int(total_tiles * percentage))  # Au moins 1 bombe
+    return max(1, int(total_tiles * percentage))  # At least 1 bomb
 
-# Function to place bombs randomly on the board
-import random
+
+"""-----------------------------------------------------------"""
+"""---------- Place the bombs randomly on the board ----------"""
+"""-----------------------------------------------------------"""
+
 
 def random_bomb_location(table, numb_bomb):
     rows = len(table)
@@ -49,7 +67,7 @@ def random_bomb_location(table, numb_bomb):
     # Generate a list of all possible tile indices
     all_positions = [(r, c) for r in range(rows) for c in range(cols)]
 
-    # Randomly sample `numb_bomb` unique positions
+    # Randomly sample numb_bomb unique positions
     bomb_positions = random.sample(all_positions, numb_bomb)
 
     # Place bombs on the randomly selected positions
@@ -59,8 +77,11 @@ def random_bomb_location(table, numb_bomb):
     return table
 
 
+"""--------------------------------------------------------------------"""
+"""---------- Assign surrounding mines number for each tiles ----------"""
+"""--------------------------------------------------------------------"""
 
-# Function to calculate all surrounding mines for each tile
+
 def all_surrounding_mines(board):
     for i in range(len(board)):
         for j in range(len(board[i])):
@@ -68,76 +89,65 @@ def all_surrounding_mines(board):
     return board
 
 
-# Fonction pour ajouter ou retirer un drapeau
-def toggle_flag(tile, button):
-    """
-    Place ou retire un drapeau sur le bouton correspondant à la tuile.
-    """
+"""*****************************************************************************************************************"""
+"""****************************************                      ***************************************************"""
+"""****************************************  Board Interaction   ***************************************************"""
+"""****************************************                      ***************************************************"""
+"""*****************************************************************************************************************"""
 
-    if tile in clicked_tiles:  # Vérifie si la case est déjà révélée
+
+"""-----------------------------------------"""
+"""---------- Toggle Flag on tile ----------"""
+"""-----------------------------------------"""
+
+
+def toggle_flag(tile, button):
+
+    if tile in clicked_tiles:  # Check if the tile is already reaveled
         print("Tile is already revealed. Cannot place a flag.")
         return
 
-
-    if not tile.is_flagged:  # Place un drapeau
+    if not tile.is_flagged:  # add the flag
         tile.is_flagged = True
         button.config(text="🚩", state="normal")  # Mettre l'emoji du drapeau
-    else:  # Retire le drapeau
+    else:  # delete the flag
         tile.is_flagged = False
-        button.config(text="", state="normal")  # Supprime l'emoji
+        button.config(text="", state="normal")
 
-# Fonction pour révéler une tuile (clic gauche)
-# Variable pour stocker les boutons (facilite leur gestion)
-buttons = []
 
-# Fonction pour terminer le jeu
-def end_game():
-    """
-    Affiche 'Game Over', désactive tous les boutons, et empêche toute interaction.
-    """
-    for btn in buttons:
-        btn.config(state="disabled")  # Désactiver tous les boutons
-    
-    # Afficher un message Game Over
-    game_over_label = tkinter.Label(root, text="GAME OVER", font=("Arial", 24), fg="red", bg="white")
-    game_over_label.place(relx=0.5, rely=0.5, anchor="center")  # Centrer le message
-    root.after(2000, game_over_label.destroy)  # Supprime le message après 2 secondes
+"""--------------------------------------"""
+"""---------- Reveal the tiles ----------"""
+"""--------------------------------------"""
 
-# Fonction pour révéler une tuile (clic gauche)
-clicked_tiles = set()
 
 def reveal_tile(tile, button):
-    """
-    Reveals a tile. If clicked again on an already revealed empty tile (surrounding_mine == 0),
-    reveals all connected empty tiles and their neighbors.
-    """
+
     print(f"Clicked on tile at {tile.location}, is_mine: {tile.is_mine}, surrounding_mine: {tile.surrounding_mine}")
-    
+
     if tile.is_flagged:  # Skip flagged tiles
         print("Tile is flagged, skipping.")
         return
-    
+
     if tile.is_mine:  # Game over on clicking a mine
         button.config(text="💣", bg="red")
-        end_game()
+        game_over()
         return
-    
+
     if tile in clicked_tiles:
-        x, y = tile.location 
+        x, y = tile.location
         print("in clicked")
         if tile.surrounding_flags(test_board) == True:
             for dx in range(-1, 2):
                 for dy in range(-1, 2):
                     if dx == 0 and dy == 0:
                         continue  # Skip the tile itself
-            
+
                     nx, ny = x + dx, y + dy
                     if 0 <= nx < len(test_board) and 0 <= ny < len(test_board[0]):
                         neighbor = test_board[nx][ny]
-                        button = buttons[nx * len(test_board[0]) + ny] # Find the button for this tile
+                        button = buttons[nx * len(test_board[0]) + ny]  # Find the button for this tile
                         if neighbor not in clicked_tiles:
                             reveal_tile(neighbor, button)
-                    
 
     if tile not in clicked_tiles:
         # First click: reveal the tile
@@ -145,28 +155,24 @@ def reveal_tile(tile, button):
         button.config(
             text=str(tile.surrounding_mine) if tile.surrounding_mine > 0 else "",
             relief="sunken",
-            bg="lightgrey" if tile.surrounding_mine == 0 else "SystemButtonFace"
+            bg="lightgrey" if tile.surrounding_mine == 0 else "SystemButtonFace",
         )
         if tile.surrounding_mine == 0:
             reveal_connected_tiles(tile)
-    else:
-        # Second click: reveal all connected empty tiles
-        if tile.surrounding_mine == 0:
-            print("Revealing connected tiles.")
-            reveal_connected_tiles(tile)
-    check_win_condition() 
+    check_win_condition()
 
+
+"""-------------------------------------------------------------------"""
+"""---------- Iteratively reveals all connected empty tiles ----------"""
+"""-------------------------------------------------------------------"""
 
 
 def reveal_connected_tiles(tile):
-    """
-    Iteratively reveals all connected empty tiles and their neighbors.
-    This is optimized to use batch updates with a queue for connected tiles.
-    """
+
     # Initialize a queue with the starting tile
     queue = deque([tile])
     clicked_tiles.add(tile)
-    
+
     # List to store tiles that need to be updated
     tiles_to_update = []
 
@@ -174,40 +180,48 @@ def reveal_connected_tiles(tile):
         current_tile = queue.popleft()  # Pop the next tile to reveal
         x, y = current_tile.location
         tiles_to_update.append(current_tile)  # Add to update list
-        
+
         # If the current tile is empty (surrounding_mine == 0), we add its neighbors to the queue
         if current_tile.surrounding_mine == 0:
             for dx in range(-1, 2):
                 for dy in range(-1, 2):
                     if dx == 0 and dy == 0:
                         continue  # Skip the tile itself
-                    
+
                     nx, ny = x + dx, y + dy
                     if 0 <= nx < len(test_board) and 0 <= ny < len(test_board[0]):
                         neighbor = test_board[nx][ny]
                         if neighbor not in clicked_tiles:  # Add unclicked neighbors
                             clicked_tiles.add(neighbor)
                             queue.append(neighbor)
-    
+
     # Now, update all tiles in batch (after collecting all connected tiles)
     for current_tile in tiles_to_update:
         x, y = current_tile.location
         button = buttons[x * len(test_board[0]) + y]  # Find the button for this tile
-        
+
         # Update button text and background
         button.config(
             text=str(current_tile.surrounding_mine) if current_tile.surrounding_mine > 0 else "",
             bg="lightgrey" if current_tile.surrounding_mine == 0 else "SystemButtonFace",
-            relief="sunken"
+            relief="sunken",
         )
-    
-    check_win_condition() 
+    check_win_condition()
 
-# Fonction pour afficher le plateau de jeu
+
+"""***********************************************************************************************************"""
+"""****************************************                ***************************************************"""
+"""****************************************  Game Screen   ***************************************************"""
+"""****************************************                ***************************************************"""
+"""***********************************************************************************************************"""
+
+
+"""-------------------------------------------------------------------------------------"""
+"""---------- Displays the game board with buttons corresponding to the tiles ----------"""
+"""-------------------------------------------------------------------------------------"""
+
+
 def render_game_board(board):
-    """
-    Displays the game board with buttons corresponding to the tiles.
-    """
     global buttons
     buttons = []  # Reset the button list
 
@@ -217,18 +231,20 @@ def render_game_board(board):
     style.configure("Red.Vertical.TScrollbar", background="red", troughcolor="white", arrowcolor="red")
     style.configure("Red.Horizontal.TScrollbar", background="red", troughcolor="white", arrowcolor="red")
 
-
     # Create the canvas and scrollbars
     # Create the canvas and scrollbars
     canvas = tkinter.Canvas(game_frame)
-    scrollbar_y = tkinter.ttk.Scrollbar(game_frame, orient="vertical", command=canvas.yview, style="Red.Vertical.TScrollbar")
-    scrollbar_x = tkinter.ttk.Scrollbar(game_frame, orient="horizontal", command=canvas.xview, style="Red.Horizontal.TScrollbar")
+    scrollbar_y = tkinter.ttk.Scrollbar(
+        game_frame, orient="vertical", command=canvas.yview, style="Red.Vertical.TScrollbar"
+    )
+    scrollbar_x = tkinter.ttk.Scrollbar(
+        game_frame, orient="horizontal", command=canvas.xview, style="Red.Horizontal.TScrollbar"
+    )
     canvas.configure(yscrollcommand=scrollbar_y.set, xscrollcommand=scrollbar_x.set)
-
 
     # Create a frame to hold the game board on the canvas
     board_frame = tkinter.Frame(canvas)
-    
+
     # Create the buttons and add them to the board frame
     for i, row in enumerate(board):
         for j, tile in enumerate(row):
@@ -239,7 +255,7 @@ def render_game_board(board):
             # Associate left and right clicks
             btn.config(command=lambda t=tile, b=btn: reveal_tile(t, b))  # Left click
             btn.bind("<Button-3>", lambda event, t=tile, b=btn: toggle_flag(t, b))  # Right click
-            
+
             # Add the button to the list
             buttons.append(btn)
 
@@ -248,15 +264,15 @@ def render_game_board(board):
         board_frame.grid_rowconfigure(i, weight=1, minsize=40)  # Scale row to expand
     for j in range(len(board[0])):
         board_frame.grid_columnconfigure(j, weight=1, minsize=40)  # Scale column to expand
-    
+
     # Add the frame to the canvas and scrollbars to the window
     canvas.create_window((0, 0), window=board_frame, anchor="nw")
-    
+
     # Dynamically resize the canvas and its frame based on the window size
     canvas.grid(row=0, column=0, sticky="nsew")
     scrollbar_y.grid(row=0, column=1, sticky="ns")
     scrollbar_x.grid(row=1, column=0, sticky="ew")
-    
+
     # Update the scrollable region after rendering the game board
     board_frame.update_idletasks()
     canvas.config(scrollregion=canvas.bbox("all"))  # Adjust scrollable region
@@ -264,14 +280,18 @@ def render_game_board(board):
     # Dynamically resize grid to fit the board's size, but make the game_frame a little smaller than the window
     game_frame.grid_rowconfigure(0, weight=1)
     game_frame.grid_columnconfigure(0, weight=1)
-    game_frame.place(relx=0.5, rely=0.6, anchor="center", width=root.winfo_width() * 0.9, height=root.winfo_height() * 0.7)
+    game_frame.place(
+        relx=0.5, rely=0.6, anchor="center", width=root.winfo_width() * 0.9, height=root.winfo_height() * 0.7
+    )
 
 
-# Fonction pour démarrer une nouvelle partie
+"""----------------------------------"""
+"""---------- Start a game ----------"""
+"""----------------------------------"""
+
+
 def start_game():
-    """
-    Starts a new game.
-    """
+
     global test_board, clicked_tiles
     clicked_tiles = set()  # Reset clicked tiles
 
@@ -297,17 +317,17 @@ def start_game():
     # Clear the game area and render the new board
     for widget in game_frame.winfo_children():
         widget.destroy()
-    
-    render_game_board(test_board)
-    
 
+    render_game_board(test_board)
+
+
+"""------------------------------------"""
+"""---------- Win Conditions ----------"""
+"""------------------------------------"""
 
 
 def check_win_condition():
-    """
-    Checks if all non-bomb tiles have been revealed.
-    If true, it ends the game with a "You Win!" message.
-    """
+
     non_bomb_tiles = 0
     revealed_tiles = 0
 
@@ -323,10 +343,29 @@ def check_win_condition():
         display_win_message()
 
 
+"""-------------------------------"""
+"""---------- Game Over ----------"""
+"""-------------------------------"""
+
+
+def game_over():
+
+    for btn in buttons:
+        btn.config(state="disabled")  # disable buttons
+
+    # Game Over message
+    game_over_label = tkinter.Label(root, text="GAME OVER", font=("Arial", 24), fg="red", bg="white")
+    game_over_label.place(relx=0.5, rely=0.5, anchor="center")
+    root.after(2000, game_over_label.destroy)
+
+
+"""-------------------------------------------------------------------"""
+"""---------- Displays win message and disables all buttons ----------"""
+"""-------------------------------------------------------------------"""
+
+
 def display_win_message():
-    """
-    Displays a "You Win!" message and disables all buttons.
-    """
+
     win_label = tkinter.Label(root, text="YOU WIN!", font=("Arial", 24), fg="green", bg="white")
     win_label.place(relx=0.5, rely=0.5, anchor="center")  # Center the message
     root.after(2000, win_label.destroy)  # Remove the message after 2 seconds
@@ -335,38 +374,69 @@ def display_win_message():
         btn.config(state="disabled")  # Disable all buttons to prevent further clicks
 
 
-
-
-
+"""*********************************************************************************************************"""
+"""****************************************              ***************************************************"""
+"""****************************************  Variables   ***************************************************"""
+"""****************************************              ***************************************************"""
+"""*********************************************************************************************************"""
 # GUI setup
 root = tkinter.Tk()
-root.geometry("1000x1000")
 
-# Zone de jeu (add a border around the game area)
+# Enable fullscreen initially
+root.attributes("-fullscreen", True)
+
+
+# Function to toggle fullscreen mode
+def toggle_fullscreen(event=None):
+    is_fullscreen = root.attributes("-fullscreen")
+    root.attributes("-fullscreen", not is_fullscreen)
+
+
+# Bind the Space key to exit fullscreen
+root.bind("<space>", lambda event: root.attributes("-fullscreen", False))
+
+# Bind the Space key to re-enter fullscreen
+root.bind("<space>", toggle_fullscreen)
+
+root.geometry("1600x900")
+
+
+# Game zone (add a border around the game area)
 game_frame = tkinter.Frame(root, bg="lightblue", borderwidth=10, relief="solid")  # Change the color here
 game_frame.place(relx=0.5, rely=0.6, anchor="center")
 
-# Other parts of your code remain the same...
 
+size_frame = tkinter.Frame(root)  # Frame pour regrouper les entrées et les labels
+size_frame.pack(pady=10)
 
-# Bouton pour démarrer une nouvelle partie
-start_button = tkinter.Button(root, text="Start Game", command=start_game)
+# Label and field for size X
+label_x = tkinter.Label(size_frame, text="X (lines) :")
+label_x.grid(row=0, column=0, padx=5)
+size_x = tkinter.Entry(size_frame, width=5)
+size_x.insert(0, "10")  # Valeur par défaut
+size_x.grid(row=0, column=1, padx=5)
+
+# Label and field for size Y
+label_y = tkinter.Label(size_frame, text="Y (columns) :")
+label_y.grid(row=1, column=0, padx=5)
+size_y = tkinter.Entry(size_frame, width=5)
+size_y.insert(0, "10")  # Valeur par défaut
+size_y.grid(row=1, column=1, padx=5)
+
+# Label and field for mine percentage
+label_percentage = tkinter.Label(size_frame, text="Percentage of mines :")
+label_percentage.grid(row=2, column=0, padx=5)
+Bomb_percent = tkinter.Entry(size_frame, width=10)
+Bomb_percent.insert(0, "15")  # Valeur par défaut
+Bomb_percent.grid(row=2, column=1, padx=5)
+
+# Start Button
+start_button = tkinter.Button(root, text="Start a Game", command=start_game)
 start_button.pack(pady=10)
 
-# Champs pour la taille du plateau
-size_x = tkinter.Entry(root, width=5)
-size_x.insert(0, "10")  # Valeur par défaut
-size_x.pack()
-size_y = tkinter.Entry(root, width=5)
-size_y.insert(0, "10")  # Valeur par défaut
-size_y.pack()
-
-Bomb_percent = tkinter.Entry(root, width=10)
-Bomb_percent.insert(15, "15")  # Valeur par défaut
-Bomb_percent.pack()
-
-# Démarrage initial
-# New variables for tracking win condition
+# Add the Quit button to the GUI
+quit_button = tkinter.Button(root, text="Quit", command=root.quit)
+quit_button.pack(pady=10)  # You can change the padding or position as needed
 
 
 start_game()
